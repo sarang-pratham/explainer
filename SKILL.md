@@ -1,80 +1,84 @@
 ---
 name: explainer
 description: >
-  Generate a self-contained, visually rich technical explainer as a single-file
-  HTML document. Use for any request to explain, visualize, or break down a
-  technical concept — comparisons, mechanisms, architectures, processes,
-  taxonomies, or deep dives. Detects the right layout mode from the question.
-  Read DESIGN.md for visual tokens. Read references/ files for layout and component templates.
-license: MIT
-compatibility: Outputs a standalone HTML file with inline CSS. Optional vanilla JS for interactive modes. Google Fonts via fonts.googleapis.com.
-metadata:
-  author: pratham
-  version: "1.0"
+  Generate a technical explainer as a .mdx file for any concept, system,
+  mechanism, architecture, algorithm, comparison, or research idea. Trigger
+  for requests to "explain", "visualize", "break down", or "create an explainer".
+  The .mdx is compiled by explainer-compile into a styled interactive dashboard.
 ---
 
-# Technical Explainer
+# Explainer Skill
 
-Generates editorial-style technical explainers as single-file HTML. The aesthetic is dense, confident, and self-contained — like a well-annotated technical magazine page.
+Write a single `.mdx` file. The file is compiled by **explainer-compile** — you do not control styling, colors, or fonts. Your job is to choose the right components, structure content clearly, and pass accurate data through props.
 
-## Before You Start
+Once the file is written, Run:
 
-Read these files in order:
-1. `DESIGN.md` — color tokens, typography roles, component rules
-2. `references/LAYOUTS.md` — HTML structure for your chosen layout mode
-3. `references/COMPONENTS.md` — shared section templates (steps, callouts, chips, table, stat row)
-4. `references/CSS.md` — the full CSS block to paste into `<style>`
+```
+npx @sarang-pratham/explainer-compile build ./<filename>.mdx --open
+```
 
-## Step 1 — Choose a Layout Mode
+---
 
-Match the question to exactly one mode. Never default to Comparison.
+# Step 1 — Preference Elicitation
 
-| Question pattern | Mode |
-|---|---|
-| "X vs Y", "compare X and Y", "difference between X and Y" | **comparison** |
-| "how does X work", "explain X internally", "what happens inside X" | **deep-dive** |
-| "what happens when", "walk me through", "how does X become Y" | **process-flow** |
-| "types of X", "kinds of X", "spectrum of X" | **taxonomy** |
-| "what is X" (short, introductory) | **concept-card** |
+**Before generating anything, ask the user these preference knobs using your internal question tool to gather their answers.** If they already specified some in their request, skip those. If they say "just go ahead" or "use defaults", proceed immediately with defaults.
 
-## Step 2 — Generate a Color Palette
+| Knob       | Options                                                                               | Default    |
+| ---------- | ------------------------------------------------------------------------------------- | ---------- |
+| `length`   | `brief` (2–3 sections) · `standard` (4–6) · `deep` (7–10)                             | `standard` |
+| `density`  | `compact` (tight, minimal prose) · `balanced` · `spacious` (expansive, detailed)      | `balanced` |
+| `tone`     | `neutral` (pure explanation) · `opinionated` (adds thesis, personal take, conclusion) | `neutral`  |
+| `diagrams` | `none` · `minimal` (1 diagram) · `rich` (2–3 diagrams)                                | `minimal`  |
 
-Derive a fresh palette for this topic. Never reuse the DESIGN.md reference tokens verbatim.
+**Understand the Content**
 
-Pick `accent-a` from the topic's domain feel:
+Extract before writing:
 
-| Domain | accent-a hue |
-|---|---|
-| Memory / cache / storage | teal, cyan |
-| Computation / inference | purple, indigo |
-| Networks / protocols | blue, slate |
-| Performance / speed | amber, orange |
-| Data structures / algorithms | green, emerald |
-| Hardware / architecture | warm gray, burnt sienna |
+- Core concept
+- Natural sections
+- What each section _is_ - process, comparison, data, system loop → pick component
+- Quantitative anchors
+- Flow or cycle?
+- Strong take or conclusion?
 
-- `accent-b`: ~150° away on the color wheel (complementary). In non-Comparison modes it marks outputs and results — it can be more analogous, just ensure clear perceptual contrast.
-- `surface`: warm neutral, `hsl(40–50, 15–30%, 92–96%)`. Never `#FFFFFF`.
-- Callout backgrounds: very desaturated, light versions of each accent.
+---
 
-## Step 3 — Extract the Content
+## Step 2 — Compose the MDX
 
-Before writing any HTML, identify:
+Read the relevant references file before composing:
 
-- The **3–5 core mechanisms or phases** that structure the explanation
-- **One pull quote per section** — the mechanism in one plain-language sentence, in `"…"`
-- **One callout per section** — alternate between warn (misconception) and note (insight)
-- **Two memorable stats** — quantitative anchors for the footer stat row
-- **Any sequences or states** that benefit from chip diagrams (token flows, buffer states, cache contents)
+- `references/layout-primitives.md` — wrappers, grids, steps, tabs
+- `references/data-primitives.md` — metrics, arrays, stacks, charts
+- `references/diagram-primitives.md` — pipelines, system loops, tree views
+- `references/editorial-primitives.md` — callouts, hero stats, inline markers
+- `references/variants.md` — semantic color variants
 
-## Core Rules
+**Every document must have:**
 
-- No `box-shadow` anywhere. Depth comes from borders and background tints only.
-- No `#FFFFFF` background. Surface is always warm-tinted.
-- No more than two accent colors per explainer.
-- Sequential processes always use `01 02 03` numbered steps — never bullet points.
-- Every `<h2>` must have a `<div class="tag">` directly above it.
-- Every section needs at least one callout and one pull quote.
-- All technical identifiers, variable names, function names → `<code>` inline.
-- Max document width: 880px.
-- Stat row always present — find two quantitative anchors for every explainer.
-- Save one self-contained `.html` file with inline `<style>` only.
+- `<Dashboard>` wrapper with `title` and `subtitle`
+- At least one `<StepSection>` anchoring the narrative
+- A closing `<EditorialCallout>` or `<HeroStat>` as the takeaway
+
+**Composition rules:**
+
+- Do not use the same component back to back
+- Layout containers are greedy (fill available space)
+- Data primitives are intrinsic (never stretch)
+- `<Marker>` and `<Badge>` can appear inline within prose
+
+---
+
+## Hard Rules
+
+- No inline styles, no hex colors, no CSS — the compiler owns all visuals
+- No raw HTML — MDX components only
+- Technical terms always use backtick inline `code` in prose
+- The output filename is chosen contextually — never hardcode `explanation.mdx`
+- **Use pure Markdown for prose, NOT HTML tags.** Use `#`, `*`, `**`, `-`, and backticks instead of `<h1>`, `<p>`, `<ul>`, `<strong>`, etc.
+- No raw HTML for structural blocks (use MDX components instead)
+- Create the .mdx file in the **current workspace**
+- **Do NOT** write import statements for components. All primitive components are globally injected and available by default.
+- **Do NOT** write metadata headers
+- **NO SQUEEZING DIAGRAMS:** Do NOT nest horizontal flow diagrams natively requiring large widths.
+- **STRICT JS OBJECT SYNTAX IN PROPS:** When passing attributes to diagram components.
+- **USE SPATIAL BREAKS (BLANK LINES):** leave at least one empty line between every component and text block in the .mdx file.
